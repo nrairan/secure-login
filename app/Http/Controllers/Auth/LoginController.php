@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class LoginController extends Controller
@@ -13,7 +15,51 @@ class LoginController extends Controller
     {
         return view('auth.login');
     }
- 
+
+    public function createRegister(){
+        return view('auth.register');
+    }
+
+    public function register(Request $request){
+        $validate = $request->validate(
+            [
+            'name' => [
+                'required', 
+                'string', 
+                'max:255'
+                ],
+
+            'email' => [
+                'required', 
+                'string',
+                'max:255',
+                'email', 
+                'unique:users,email'
+                ],
+
+            'password' => [
+                'required',
+                'string', 
+                'min:8',
+                'confirmed',
+            ]
+            ]
+        );
+
+        User::create([
+            'name' => $validate['name'],
+            'email' => $validate['email'],
+            'password' => Hash::make($validate['password']),
+        ]);
+
+        return redirect()
+        ->route('login')
+        ->with(
+            'success', 
+            'Registro exitoso. Por favor, inicia sesión.'
+        );
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
@@ -30,7 +76,7 @@ class LoginController extends Controller
     }
     $request->session()->regenerate();
 
-    return redirect()->intended(route('dashboard.dashboard'));
+    return redirect()->intended(route('dashboard'));
     }
     public function destroy(Request $request): RedirectResponse
     {
